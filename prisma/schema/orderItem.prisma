@@ -1,0 +1,16 @@
+model OrderItems {
+    id       String @id @default(uuid())
+    quantity Int
+    price    Float
+
+    orderId String
+    order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+    medicineId String
+    medicine   Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("orderItems")
+}
