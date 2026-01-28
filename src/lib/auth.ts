@@ -7,17 +7,20 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   trustedOrigins: [process.env.APP_URL!],
-  additionalFields: {
-    role: {
-      type: "string",
-      defaultValue: "CUSTOMER",
-    },
-    status: {
-      type: "string",
-      defaultValue: "ACTIVE",
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        defaultValue: "CUSTOMER",
+        required: false,
+      },
+      status: {
+        type: "string",
+        defaultValue: "ACTIVE",
+        required: false,
+      },
     },
   },
-
   emailAndPassword: {
     enabled: true,
   },
