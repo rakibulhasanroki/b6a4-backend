@@ -75,7 +75,7 @@ const getAllMedicines = async (query: any) => {
 
   return {
     data: medicines,
-    meta: {
+    metaData: {
       total,
       page: Number(page),
       limit: Number(limit),
