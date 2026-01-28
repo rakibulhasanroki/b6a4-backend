@@ -49,6 +49,7 @@ export async function userAuth(
     }
 
     req.user = currentUser;
+    console.log(req.user);
     next();
   } catch (error) {
     res.status(500).json({ message: "Authentication failed" });
@@ -58,7 +59,9 @@ export async function userAuth(
 export function roleAuth(...roles: Role[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({
+        message: "unauthorized",
+      });
     }
 
     if (!roles.includes(req.user.role)) {
