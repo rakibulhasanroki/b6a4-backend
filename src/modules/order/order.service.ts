@@ -1,4 +1,4 @@
-import { OrderStatus } from "../../../generated/prisma/enums";
+import { OrderStatus, Role } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 
 interface OrderItemInput {
@@ -157,8 +157,101 @@ const getOrderById = async (orderId: string, customerId: string) => {
   return order;
 };
 
+const getSellerOrders = async (sellerId: string) => {
+  return prisma.order.findMany({
+    where: {
+      orderItems: {
+        some: {
+          medicine: {
+            sellerId: sellerId,
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+      customer: {
+        select: { id: true, name: true, email: true },
+      },
+      orderItems: {
+        include: {
+          medicine: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+const updateOrderStatus = async (
+  orderId: string,
+  userId: string,
+  role: Role,
+  status: OrderStatus,
+) => {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      orderItems: {
+        include: {
+          medicine: true,
+        },
+      },
+    },
+  });
+
+  if (!order) throw new Error("Order not found");
+
+  // Customer only can cancel
+  if (role === "CUSTOMER") {
+    if (order.customerId !== userId) {
+      throw new Error("Not your order");
+    }
+
+    if (status !== OrderStatus.CANCELLED) {
+      throw new Error("Customer only can cancel");
+    }
+    if (order.status === "DELIVERED") {
+      throw new Error("Delivered order cannot be cancelled");
+    }
+
+    return prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+    });
+  }
+
+  // Seller can shipped,processing and delivered
+  if (role === "SELLER") {
+    const sellerOwnsItem = order.orderItems.some(
+      (item) => item.medicine.sellerId === userId,
+    );
+
+    if (status === OrderStatus.CANCELLED) {
+      throw new Error("Only customer can cancel");
+    }
+    if (!sellerOwnsItem) {
+      throw new Error("You are not allowed to update this order");
+    }
+
+    return prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+    });
+  }
+
+  throw new Error("Invalid role");
+};
+
 export const OrderService = {
   createOrder,
   getMyOrders,
   getOrderById,
+  getSellerOrders,
+  updateOrderStatus,
 };

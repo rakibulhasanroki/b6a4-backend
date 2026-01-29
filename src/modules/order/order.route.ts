@@ -4,13 +4,14 @@ import { roleAuth, userAuth } from "../../middleware/auth";
 import { Role } from "../../../generated/prisma/enums";
 
 const router: Router = Router();
-
-router.post(
-  "/orders",
+// seller
+router.get(
+  "/seller/orders",
   userAuth,
-  roleAuth(Role.CUSTOMER),
-  OrderController.createOrder,
+  roleAuth(Role.SELLER),
+  OrderController.getSellerOrders,
 );
+// customer
 router.get(
   "/orders",
   userAuth,
@@ -22,6 +23,21 @@ router.get(
   userAuth,
   roleAuth(Role.CUSTOMER),
   OrderController.getOrderById,
+);
+
+// customer
+router.post(
+  "/orders",
+  userAuth,
+  roleAuth(Role.CUSTOMER),
+  OrderController.createOrder,
+);
+
+router.patch(
+  "/seller/orders/:id",
+  userAuth,
+  roleAuth(Role.CUSTOMER, Role.SELLER),
+  OrderController.updateOrderStatus,
 );
 
 export const orderRoutes = router;

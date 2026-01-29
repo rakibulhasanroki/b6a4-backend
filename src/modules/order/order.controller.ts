@@ -60,8 +60,49 @@ const getOrderById = async (req: Request, res: Response) => {
   }
 };
 
+const getSellerOrders = async (req: Request, res: Response) => {
+  try {
+    const sellerId = req.user!.id;
+
+    const orders = await OrderService.getSellerOrders(sellerId);
+
+    res.status(200).json({
+      success: true,
+      data: orders,
+    });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+const updateOrderStatus = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const role = req.user!.role;
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const result = await OrderService.updateOrderStatus(
+      id as string,
+      userId,
+      role,
+      status,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 export const OrderController = {
   createOrder,
   getMyOrders,
   getOrderById,
+  getSellerOrders,
+  updateOrderStatus,
 };
