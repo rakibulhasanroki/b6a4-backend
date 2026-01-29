@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { OrderService } from "./order.service";
+import { OrderStatus } from "../../../generated/prisma/enums";
 
 const createOrder = async (req: Request, res: Response) => {
   try {

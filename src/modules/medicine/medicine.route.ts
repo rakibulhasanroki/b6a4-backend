@@ -16,7 +16,7 @@ router.post(
   MedicineController.createMedicine,
 );
 
-router.put(
+router.patch(
   "/seller/medicines/:id",
   userAuth,
   roleAuth("SELLER"),

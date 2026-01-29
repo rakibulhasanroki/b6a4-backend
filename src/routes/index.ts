@@ -8,7 +8,7 @@ const router: Router = Router();
 
 router.use(authRouter);
 
-router.use("/categories", categoryRoutes);
+router.use(categoryRoutes);
 router.use(MedicineRoutes);
 router.use(orderRoutes);
 

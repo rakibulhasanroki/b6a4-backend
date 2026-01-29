@@ -5,11 +5,11 @@ import { CategoryController } from "./category.controller";
 
 const router: Router = Router();
 
-router.get("/", CategoryController.getAllCategories);
+router.get("/categories", CategoryController.getAllCategories);
 
 // Admin can create category only
 router.post(
-  "/",
+  "/categories",
   userAuth,
   roleAuth(Role.ADMIN),
   CategoryController.createCategory,

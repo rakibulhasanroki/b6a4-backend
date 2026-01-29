@@ -49,7 +49,7 @@ export async function userAuth(
     }
 
     req.user = currentUser;
-    console.log(req.user);
+
     next();
   } catch (error) {
     res.status(500).json({ message: "Authentication failed" });

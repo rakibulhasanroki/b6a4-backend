@@ -1,3 +1,4 @@
+import { OrderStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 
 interface OrderItemInput {
@@ -14,67 +15,85 @@ const createOrder = async (
     throw new Error("Order must contain at least one item");
   }
 
-  // Get all medicines from DB
   const medicineIds = orderItems.map((item) => item.medicineId);
 
   const medicines = await prisma.medicine.findMany({
     where: { id: { in: medicineIds } },
   });
 
-  console.log(medicines);
   // Validate all medicines exist
   if (medicines.length !== orderItems.length) {
     throw new Error("One or more medicines not found");
   }
 
-  let totalAmount = 0;
-
-  const orderItemsData = orderItems.map((item) => {
+  const medicineItems = orderItems.map((item) => {
     const medicine = medicines.find((m) => m.id === item.medicineId)!;
 
     if (medicine.stock < item.quantity) {
       throw new Error(`Not enough stock for ${medicine.name}`);
     }
 
-    totalAmount += medicine.price * item.quantity;
-
     return {
-      medicineId: medicine.id,
-      quantity: item.quantity,
+      ...item,
       price: medicine.price,
+      sellerId: medicine.sellerId,
     };
   });
 
-  // create order + items
-  const order = await prisma.$transaction(async (tx) => {
-    const newOrder = await tx.order.create({
-      data: {
-        customerId,
-        shippingAddress,
-        totalAmount,
-        orderItems: {
-          create: orderItemsData,
-        },
-      },
-      include: {
-        orderItems: true,
-      },
-    });
+  // Grouping order for seller
+  const sellerItems: Record<string, typeof medicineItems> = {};
+  for (const item of medicineItems) {
+    if (!sellerItems[item.sellerId]) {
+      sellerItems[item.sellerId] = [];
+    }
+    sellerItems[item.sellerId]?.push(item);
+  }
+  // Create multiple order based on seller
+  const orders = await prisma.$transaction(async (tx) => {
+    const sellerOrders = [];
+    for (const sellerId in sellerItems) {
+      const itemsData = sellerItems[sellerId]!;
+      let totalAmount = 0;
+      const orderItemsData = itemsData?.map((item) => {
+        totalAmount += item.price * item.quantity;
+        return {
+          medicineId: item.medicineId,
+          quantity: item.quantity,
+          price: item.price,
+        };
+      });
 
-    // Reduce stock
-    for (const item of orderItems) {
-      await tx.medicine.update({
-        where: { id: item.medicineId },
+      const order = await tx.order.create({
         data: {
-          stock: { decrement: item.quantity },
+          customerId,
+          shippingAddress,
+          totalAmount,
+          orderItems: {
+            create: orderItemsData,
+          },
+        },
+        include: {
+          orderItems: true,
         },
       });
+
+      for (const item of itemsData) {
+        await tx.medicine.update({
+          where: {
+            id: item.medicineId,
+          },
+          data: {
+            stock: { decrement: item.quantity },
+          },
+        });
+      }
+      sellerOrders.push(order);
     }
 
-    return newOrder;
+    return sellerOrders;
   });
 
-  return order;
+  return orders;
 };
 
 const getMyOrders = async (customerId: string) => {
@@ -90,6 +109,12 @@ const getMyOrders = async (customerId: string) => {
               name: true,
               price: true,
               image: true,
+              seller: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
           },
         },
@@ -112,6 +137,12 @@ const getOrderById = async (orderId: string, customerId: string) => {
               name: true,
               image: true,
               price: true,
+              seller: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
           },
         },
