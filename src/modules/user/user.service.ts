@@ -1,3 +1,4 @@
+import { Role, UserStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 
 const getAllUsers = async () => {
@@ -65,8 +66,39 @@ const updateMyProfile = async (
   return updatedUser;
 };
 
+const updateUserStatus = async (userId: string, status: UserStatus) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // admin can not banned admin
+  if (user.role === Role.ADMIN && status === UserStatus.BANNED) {
+    throw new Error("Admin user cannot be banned");
+  }
+  if (user.status === status) {
+    throw new Error(`User is already ${status.toLowerCase()}`);
+  }
+
+  return prisma.user.update({
+    where: { id: userId },
+    data: { status },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+    },
+  });
+};
+
 export const UserService = {
   getAllUsers,
   getMyProfile,
   updateMyProfile,
+  updateUserStatus,
 };
