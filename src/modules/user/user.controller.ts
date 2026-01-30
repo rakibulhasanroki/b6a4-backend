@@ -1,6 +1,15 @@
 import { Request, Response } from "express";
 import { UserService } from "./user.service";
-import { prisma } from "../../lib/prisma";
+
+const getAllUsers = async (req: Request, res: Response) => {
+  const users = await UserService.getAllUsers();
+
+  res.status(200).json({
+    success: true,
+    message: "Users retrieved successfully",
+    data: users,
+  });
+};
 
 const getMyProfile = async (req: Request, res: Response) => {
   try {
@@ -34,6 +43,7 @@ const updateMyProfile = async (req: Request, res: Response) => {
 };
 
 export const UserController = {
+  getAllUsers,
   getMyProfile,
   updateMyProfile,
 };

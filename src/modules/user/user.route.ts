@@ -4,6 +4,12 @@ import { roleAuth, userAuth } from "../../middleware/auth";
 import { Role } from "../../../generated/prisma/enums";
 
 const router: Router = Router();
+router.get(
+  "/users",
+  userAuth,
+  roleAuth(Role.ADMIN),
+  UserController.getAllUsers,
+);
 
 router.get("/user/me", userAuth, UserController.getMyProfile);
 router.patch(
