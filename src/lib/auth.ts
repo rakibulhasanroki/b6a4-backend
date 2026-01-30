@@ -19,6 +19,10 @@ export const auth = betterAuth({
         defaultValue: "ACTIVE",
         required: false,
       },
+      phoneNumber: {
+        type: "string",
+        required: false,
+      },
     },
   },
   emailAndPassword: {

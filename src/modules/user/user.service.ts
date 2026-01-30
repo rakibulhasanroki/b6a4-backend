@@ -20,6 +20,35 @@ const getMyProfile = async (userId: string) => {
   return user;
 };
 
+const updateMyProfile = async (
+  userId: string,
+  payload: { name?: string; phoneNumber?: string },
+) => {
+  const { name, phoneNumber } = payload;
+  const updateData: any = {};
+  if (name !== undefined) {
+    updateData.name = name;
+  }
+
+  if (phoneNumber !== undefined) {
+    updateData.phoneNumber = phoneNumber;
+  }
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: updateData,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      phoneNumber: true,
+    },
+  });
+
+  return updatedUser;
+};
+
 export const UserService = {
   getMyProfile,
+  updateMyProfile,
 };
