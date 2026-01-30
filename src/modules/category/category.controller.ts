@@ -13,8 +13,11 @@ const createCategory = async (req: Request, res: Response) => {
       message: "Category created successfully",
       data: category,
     });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to create category" });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to create category",
+    });
   }
 };
 
@@ -31,7 +34,50 @@ const getAllCategories = async (req: Request, res: Response) => {
   }
 };
 
+const updateCategory = async (req: Request, res: Response) => {
+  try {
+    const { categoryId } = req.params;
+    const { name } = req.body;
+
+    const category = await CategoryService.updateCategory(
+      categoryId as string,
+      name,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Category updated successfully",
+      data: category,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to update category",
+    });
+  }
+};
+
+const deleteCategory = async (req: Request, res: Response) => {
+  try {
+    const { categoryId } = req.params;
+
+    await CategoryService.deleteCategory(categoryId as string);
+
+    res.status(200).json({
+      success: true,
+      message: "Category deleted successfully",
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to delete category",
+    });
+  }
+};
+
 export const CategoryController = {
   createCategory,
   getAllCategories,
+  updateCategory,
+  deleteCategory,
 };
