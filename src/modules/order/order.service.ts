@@ -96,9 +96,11 @@ const createOrder = async (
   return orders;
 };
 
-const getMyOrders = async (customerId: string) => {
+const getOrders = async (userId: string, role: Role) => {
+  const orderFilter = role === Role.ADMIN ? {} : { customerId: userId };
+
   return prisma.order.findMany({
-    where: { customerId },
+    where: orderFilter,
     orderBy: { createdAt: "desc" },
     include: {
       orderItems: {
@@ -250,7 +252,7 @@ const updateOrderStatus = async (
 
 export const OrderService = {
   createOrder,
-  getMyOrders,
+  getOrders,
   getOrderById,
   getSellerOrders,
   updateOrderStatus,

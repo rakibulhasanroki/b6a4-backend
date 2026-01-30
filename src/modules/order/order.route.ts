@@ -15,8 +15,8 @@ router.get(
 router.get(
   "/orders",
   userAuth,
-  roleAuth(Role.CUSTOMER),
-  OrderController.getMyOrders,
+  roleAuth(Role.ADMIN, Role.CUSTOMER),
+  OrderController.getOrders,
 );
 router.get(
   "/orders/:id",
@@ -34,7 +34,7 @@ router.post(
 );
 
 router.patch(
-  "/seller/orders/:id",
+  "/orders/:id",
   userAuth,
   roleAuth(Role.CUSTOMER, Role.SELLER),
   OrderController.updateOrderStatus,

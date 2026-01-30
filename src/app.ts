@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import routes from "./routes";
+import { notFound } from "./middleware/notFound";
 
 const app: Application = express();
 app.use(
@@ -17,5 +18,6 @@ app.get("/", (req: Request, res: Response) => {
 
 // better-auth
 app.use("/api", routes);
+app.use(notFound);
 
 export default app;

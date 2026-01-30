@@ -25,9 +25,11 @@ const createOrder = async (req: Request, res: Response) => {
   }
 };
 
-const getMyOrders = async (req: Request, res: Response) => {
+const getOrders = async (req: Request, res: Response) => {
   try {
-    const orders = await OrderService.getMyOrders(req.user!.id);
+    const { id, role } = req.user!;
+
+    const orders = await OrderService.getOrders(id, role);
 
     res.json({
       success: true,
@@ -101,7 +103,7 @@ const updateOrderStatus = async (req: Request, res: Response) => {
 
 export const OrderController = {
   createOrder,
-  getMyOrders,
+  getOrders,
   getOrderById,
   getSellerOrders,
   updateOrderStatus,
