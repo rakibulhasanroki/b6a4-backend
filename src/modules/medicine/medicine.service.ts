@@ -65,6 +65,18 @@ const getAllMedicines = async (query: any) => {
           name: true,
         },
       },
+      reviews: {
+        select: {
+          customer: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          rating: true,
+          comment: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",

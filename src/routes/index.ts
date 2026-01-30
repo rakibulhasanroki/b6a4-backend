@@ -4,6 +4,7 @@ import { CategoryRoutes } from "../modules/category/category.route";
 import { MedicineRoutes } from "../modules/medicine/medicine.route";
 import { OrderRoutes } from "../modules/order/order.route";
 import { UserRoutes } from "../modules/user/user.route";
+import { ReviewRoutes } from "../modules/review/review.route";
 
 const router: Router = Router();
 
@@ -12,5 +13,6 @@ router.use(UserRoutes);
 router.use(CategoryRoutes);
 router.use(MedicineRoutes);
 router.use(OrderRoutes);
+router.use(ReviewRoutes);
 
 export default router;
