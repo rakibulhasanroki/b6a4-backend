@@ -15,4 +15,4 @@ router.post(
   CategoryController.createCategory,
 );
 
-export const categoryRoutes = router;
+export const CategoryRoutes = router;
