@@ -5,9 +5,17 @@ import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandele";
 
 const app: Application = express();
+const allowedOrigins = process.env.APP_URL?.split(",") || [];
+
 app.use(
   cors({
-    origin: process.env.APP_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
@@ -19,7 +27,9 @@ app.get("/", (req: Request, res: Response) => {
 
 // better-auth
 app.use("/api", routes);
+// not found route
 app.use(notFound);
+// error handler route
 app.use(errorHandler);
 
 export default app;
