@@ -13,6 +13,13 @@ router.get(
   roleAuth(Role.SELLER),
   OrderController.getSellerOrders,
 );
+router.get(
+  "/seller/stats",
+  userAuth,
+  checkUserStatus,
+  roleAuth(Role.SELLER),
+  OrderController.getSellerStats,
+);
 // customer
 router.get(
   "/orders",

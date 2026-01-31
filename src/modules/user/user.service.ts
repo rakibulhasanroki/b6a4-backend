@@ -1,8 +1,14 @@
 import { Role, UserStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 
-const getAllUsers = async () => {
-  return prisma.user.findMany({
+const getAllUsers = async (query: any) => {
+  const { page = 1, limit = 10 } = query;
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const users = await prisma.user.findMany({
+    skip,
+    take: Number(limit),
     select: {
       id: true,
       name: true,
@@ -16,6 +22,18 @@ const getAllUsers = async () => {
       createdAt: "desc",
     },
   });
+
+  const total = await prisma.user.count();
+
+  return {
+    data: users,
+    metaData: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
+    },
+  };
 };
 
 const getMyProfile = async (userId: string) => {
@@ -101,9 +119,96 @@ const updateUserStatus = async (userId: string, status: UserStatus) => {
   });
 };
 
+const getAdminStats = async () => {
+  return await prisma.$transaction(async (tx) => {
+    const [
+      totalUsers,
+      activeUsers,
+      bannedUsers,
+      sellers,
+      customer,
+
+      totalOrders,
+      pendingOrders,
+      completedOrders,
+      cancelledOrders,
+
+      totalMedicines,
+      lowStockMedicines,
+      outOfStockMedicines,
+
+      totalCategories,
+      emptyCategories,
+    ] = await Promise.all([
+      tx.user.count(),
+      tx.user.count({ where: { status: UserStatus.ACTIVE } }),
+      tx.user.count({ where: { status: UserStatus.BANNED } }),
+      tx.user.count({ where: { role: Role.SELLER } }),
+      tx.user.count({ where: { role: Role.CUSTOMER } }),
+
+      tx.order.count(),
+      tx.order.count({ where: { status: "PROCESSING" } }),
+      tx.order.count({ where: { status: "DELIVERED" } }),
+      tx.order.count({ where: { status: "CANCELLED" } }),
+
+      tx.medicine.count(),
+      tx.medicine.count({
+        where: {
+          stock: {
+            gt: 0,
+            lte: 10,
+          },
+        },
+      }),
+      tx.medicine.count({
+        where: {
+          stock: {
+            lte: 0,
+          },
+        },
+      }),
+
+      tx.category.count(),
+      tx.category.count({
+        where: {
+          medicines: {
+            none: {},
+          },
+        },
+      }),
+    ]);
+
+    return {
+      users: {
+        total: totalUsers,
+        active: activeUsers,
+        banned: bannedUsers,
+        sellers,
+        customer,
+      },
+      orders: {
+        total: totalOrders,
+        pending: pendingOrders,
+        completed: completedOrders,
+        cancelled: cancelledOrders,
+      },
+      medicines: {
+        total: totalMedicines,
+        lowStock: lowStockMedicines,
+        outOfStock: outOfStockMedicines,
+      },
+      categories: {
+        total: totalCategories,
+        empty: emptyCategories,
+      },
+    };
+  });
+};
+
 export const UserService = {
   getAllUsers,
   getMyProfile,
   updateMyProfile,
   updateUserStatus,
+  getAdminStats,
 };

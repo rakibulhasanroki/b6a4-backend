@@ -10,6 +10,14 @@ router.get("/medicines", MedicineController.getAllMedicines);
 router.get("/medicines/:id", MedicineController.getMedicineById);
 
 // Seller
+router.get(
+  "/seller/medicines",
+  userAuth,
+  checkUserStatus,
+  roleAuth("SELLER"),
+  MedicineController.getSellerMedicines,
+);
+
 router.post(
   "/seller/medicines",
   userAuth,

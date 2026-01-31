@@ -3,7 +3,7 @@ import { UserService } from "./user.service";
 
 const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const users = await UserService.getAllUsers();
+    const users = await UserService.getAllUsers(req.query);
 
     res.status(200).json({
       success: true,
@@ -76,9 +76,28 @@ const updateUserStatus = async (
   }
 };
 
+const getAdminStats = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const stats = await UserService.getAdminStats();
+
+    res.status(200).json({
+      success: true,
+      message: "User stats  retrieve successfully",
+      data: stats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const UserController = {
   getAllUsers,
   getMyProfile,
   updateMyProfile,
   updateUserStatus,
+  getAdminStats,
 };

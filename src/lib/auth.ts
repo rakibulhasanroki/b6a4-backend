@@ -1,16 +1,19 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
+import { allowedORigin } from "../config";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
 
-  baseURL: process.env.BETTER_AUTH_URL,
-  secret: process.env.BETTER_AUTH_SECRET,
+  trustedOrigins: allowedORigin,
 
-  trustedOrigins: process.env.APP_URL?.split(","),
+  emailAndPassword: {
+    enabled: true,
+    signUpFields: ["phoneNumber", "role"],
+  },
 
   user: {
     additionalFields: {
@@ -30,8 +33,13 @@ export const auth = betterAuth({
       },
     },
   },
-
-  emailAndPassword: {
-    enabled: true,
+  advanced: {
+    cookiePrefix: "better-auth",
+    useSecureCookies: process.env.NODE_ENV === "production",
+    defaultCookieAttributes: {
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: process.env.NODE_ENV === "production",
+    },
   },
 });

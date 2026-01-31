@@ -27,6 +27,28 @@ const getAllMedicines = async (
   }
 };
 
+const getSellerMedicines = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const sellerId = req.user!.id;
+
+    const result = await MedicineService.getSellerMedicines(
+      sellerId,
+      req.query,
+    );
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getMedicineById = async (
   req: Request,
   res: Response,
@@ -79,4 +101,5 @@ export const MedicineController = {
   getMedicineById,
   updateMedicine,
   deleteMedicine,
+  getSellerMedicines,
 };

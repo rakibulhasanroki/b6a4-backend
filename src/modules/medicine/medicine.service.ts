@@ -17,6 +17,7 @@ const getAllMedicines = async (query: any) => {
     minPrice,
     maxPrice,
     search,
+    sort,
     page = 1,
     limit = 10,
   } = query;
@@ -64,6 +65,16 @@ const getAllMedicines = async (query: any) => {
 
   const skip = (Number(page) - 1) * Number(limit);
 
+  let orderBy: Prisma.MedicineOrderByWithRelationInput = { createdAt: "desc" };
+
+  if (sort === "price_asc") {
+    orderBy = { price: "asc" };
+  }
+
+  if (sort === "price_desc") {
+    orderBy = { price: "desc" };
+  }
+
   const medicines = await prisma.medicine.findMany({
     where,
     skip,
@@ -89,6 +100,49 @@ const getAllMedicines = async (query: any) => {
         },
       },
     },
+    orderBy,
+  });
+
+  const total = await prisma.medicine.count({ where });
+
+  return {
+    data: medicines,
+    metaData: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
+    },
+  };
+};
+
+const getSellerMedicines = async (sellerId: string, query: any) => {
+  const { categoryId, search, page = 1, limit = 10 } = query;
+
+  const where: any = {
+    sellerId,
+  };
+
+  if (categoryId) {
+    where.categoryId = categoryId;
+  }
+
+  if (search) {
+    where.name = {
+      contains: search,
+      mode: "insensitive",
+    };
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const medicines = await prisma.medicine.findMany({
+    where,
+    skip,
+    take: Number(limit),
+    include: {
+      category: true,
+    },
     orderBy: {
       createdAt: "desc",
     },
@@ -110,7 +164,22 @@ const getAllMedicines = async (query: any) => {
 const getMedicineById = async (id: string) => {
   const medicine = prisma.medicine.findUnique({
     where: { id },
-    include: { category: true, seller: true },
+    include: {
+      category: true,
+      seller: true,
+      reviews: {
+        select: {
+          customer: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          rating: true,
+          comment: true,
+        },
+      },
+    },
   });
 
   if (!medicine) throw new Error("Medicine not found");
@@ -158,4 +227,5 @@ export const MedicineService = {
   getMedicineById,
   updateMedicine,
   deleteMedicine,
+  getSellerMedicines,
 };

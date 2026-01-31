@@ -10,6 +10,14 @@ router.get(
   roleAuth(Role.ADMIN),
   UserController.getAllUsers,
 );
+
+router.get(
+  "/users/stats",
+  userAuth,
+  roleAuth(Role.ADMIN),
+  UserController.getAdminStats,
+);
+
 router.get("/user/me", userAuth, UserController.getMyProfile);
 
 router.patch(

@@ -96,13 +96,28 @@ const createOrder = async (
   return orders;
 };
 
-const getOrders = async (userId: string, role: Role) => {
+const getOrders = async (
+  userId: string,
+  role: Role,
+  page: number,
+  limit: number,
+) => {
   const orderFilter = role === Role.ADMIN ? {} : { customerId: userId };
+  const skip = (Number(page) - 1) * Number(limit);
 
-  return prisma.order.findMany({
+  const result = await prisma.order.findMany({
+    skip,
+    take: Number(limit),
     where: orderFilter,
     orderBy: { createdAt: "desc" },
     include: {
+      customer: {
+        select: {
+          name: true,
+          phoneNumber: true,
+          email: true,
+        },
+      },
       orderItems: {
         include: {
           medicine: {
@@ -115,6 +130,8 @@ const getOrders = async (userId: string, role: Role) => {
                 select: {
                   id: true,
                   name: true,
+                  phoneNumber: true,
+                  email: true,
                 },
               },
             },
@@ -123,6 +140,20 @@ const getOrders = async (userId: string, role: Role) => {
       },
     },
   });
+
+  const total = await prisma.order.count({
+    where: orderFilter,
+  });
+
+  return {
+    data: result,
+    metaData: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
+    },
+  };
 };
 
 const getOrderById = async (orderId: string, customerId: string) => {
@@ -136,6 +167,7 @@ const getOrderById = async (orderId: string, customerId: string) => {
         include: {
           medicine: {
             select: {
+              id: true,
               name: true,
               image: true,
               price: true,
@@ -159,8 +191,15 @@ const getOrderById = async (orderId: string, customerId: string) => {
   return order;
 };
 
-const getSellerOrders = async (sellerId: string) => {
-  return prisma.order.findMany({
+const getSellerOrders = async (
+  sellerId: string,
+  page: number,
+  limit: number,
+) => {
+  const skip = (Number(page) - 1) * Number(limit);
+  const orders = await prisma.order.findMany({
+    skip,
+    take: Number(limit),
     where: {
       orderItems: {
         some: {
@@ -173,7 +212,7 @@ const getSellerOrders = async (sellerId: string) => {
     orderBy: { createdAt: "desc" },
     include: {
       customer: {
-        select: { id: true, name: true, email: true },
+        select: { id: true, name: true, email: true, phoneNumber: true },
       },
       orderItems: {
         include: {
@@ -188,6 +227,26 @@ const getSellerOrders = async (sellerId: string) => {
       },
     },
   });
+  const total = await prisma.order.count({
+    where: {
+      orderItems: {
+        some: {
+          medicine: {
+            sellerId: sellerId,
+          },
+        },
+      },
+    },
+  });
+  return {
+    data: orders,
+    metaData: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
+    },
+  };
 };
 
 const updateOrderStatus = async (
@@ -250,10 +309,58 @@ const updateOrderStatus = async (
   throw new Error("Invalid role");
 };
 
+const getSellerStats = async (sellerId: string) => {
+  const orders = await prisma.order.findMany({
+    where: {
+      orderItems: {
+        some: {
+          medicine: {
+            sellerId,
+          },
+        },
+      },
+    },
+    include: {
+      orderItems: {
+        include: {
+          medicine: true,
+        },
+      },
+    },
+  });
+
+  const totalOrders = orders.length;
+  const deliveredOrders = orders.filter(
+    (order) => order.status === OrderStatus.DELIVERED,
+  ).length;
+  const cancelledOrders = orders.filter(
+    (order) => order.status === OrderStatus.CANCELLED,
+  ).length;
+  const pendingOrders = orders.filter(
+    (order) =>
+      order.status === OrderStatus.PROCESSING ||
+      order.status === OrderStatus.SHIPPED,
+  ).length;
+
+  const totalRevenue = orders
+    .filter((order) => order.status !== OrderStatus.CANCELLED)
+    .reduce((sum, order) => sum + order.totalAmount, 0)
+    .toFixed(2);
+
+  return {
+    totalOrders,
+    deliveredOrders,
+    pendingOrders,
+    cancelledOrders,
+    totalRevenue,
+  };
+};
+
 export const OrderService = {
   createOrder,
   getOrders,
   getOrderById,
   getSellerOrders,
   updateOrderStatus,
+  getSellerStats,
 };
