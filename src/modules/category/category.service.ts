@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma";
 
 const createCategory = async (name: string) => {
+  if (!name) throw new Error("Category name is required");
   const existCategory = await prisma.category.findUnique({
     where: { name },
   });

@@ -18,5 +18,6 @@ model Medicine {
     reviews    Review[]
     orderItems OrderItems[]
 
+    @@unique([name, manufacturer, sellerId])
     @@map("medicine")
 }

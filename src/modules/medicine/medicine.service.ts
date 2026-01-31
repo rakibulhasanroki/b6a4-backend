@@ -1,3 +1,4 @@
+import { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 
 const createMedicine = async (payload: any, sellerId: string) => {
@@ -37,18 +38,28 @@ const getAllMedicines = async (query: any) => {
 
   // Search by name
   if (search) {
-    where.name = {
-      contains: search,
-      mode: "insensitive",
-    };
+    where.OR = [
+      {
+        name: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+      {
+        manufacturer: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+    ];
   }
 
   // Price range
-  if (minPrice || maxPrice) {
+  if (minPrice !== undefined || maxPrice !== undefined) {
     where.price = {};
 
-    if (minPrice) where.price.gte = Number(minPrice);
-    if (maxPrice) where.price.lte = Number(maxPrice);
+    if (minPrice !== undefined) where.price.gte = Number(minPrice);
+    if (maxPrice !== undefined) where.price.lte = Number(maxPrice);
   }
 
   const skip = (Number(page) - 1) * Number(limit);
@@ -97,23 +108,48 @@ const getAllMedicines = async (query: any) => {
 };
 
 const getMedicineById = async (id: string) => {
-  return prisma.medicine.findUnique({
+  const medicine = prisma.medicine.findUnique({
     where: { id },
     include: { category: true, seller: true },
   });
+
+  if (!medicine) throw new Error("Medicine not found");
+  return medicine;
 };
 
-const updateMedicine = async (id: string, payload: any, sellerId: string) => {
-  return prisma.medicine.updateMany({
+const updateMedicine = async (
+  id: string,
+  payload: Prisma.MedicineUpdateInput,
+  sellerId: string,
+) => {
+  if (payload.price !== undefined && Number(payload.price) < 0)
+    throw new Error("Price cannot be negative");
+
+  if (payload.stock !== undefined && Number(payload.stock) < 0)
+    throw new Error("Stock cannot be negative");
+
+  const result = await prisma.medicine.updateMany({
     where: { id, sellerId },
     data: payload,
   });
+
+  if (result.count === 0) {
+    throw new Error("Medicine not found or unauthorized");
+  }
+
+  return result;
 };
 
 const deleteMedicine = async (id: string, sellerId: string) => {
-  return prisma.medicine.deleteMany({
+  const result = await prisma.medicine.deleteMany({
     where: { id, sellerId },
   });
+
+  if (result.count === 0) {
+    throw new Error("Medicine not found or unauthorized");
+  }
+
+  return result;
 };
 
 export const MedicineService = {
