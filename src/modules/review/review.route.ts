@@ -3,6 +3,7 @@ import { ReviewController } from "./review.controller";
 
 import { Role } from "../../../generated/prisma/enums";
 import { roleAuth, userAuth } from "../../middleware/auth";
+import { checkUserStatus } from "../../middleware/checkUserStatus";
 
 const router: Router = express.Router();
 
@@ -10,6 +11,7 @@ const router: Router = express.Router();
 router.post(
   "/reviews",
   userAuth,
+  checkUserStatus,
   roleAuth(Role.CUSTOMER),
   ReviewController.createReview,
 );

@@ -7,7 +7,7 @@ model Order {
     updatedAt       DateTime    @updatedAt
 
     customerId String
-    customer   User         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    customer   User         @relation(fields: [customerId], references: [id], onDelete: Restrict)
     orderItems OrderItems[]
 
     @@map("order")

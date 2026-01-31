@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { MedicineController } from "./medicine.controller";
 import { userAuth, roleAuth } from "../../middleware/auth";
+import { checkUserStatus } from "../../middleware/checkUserStatus";
 
 const router: Router = Router();
 
@@ -12,6 +13,7 @@ router.get("/medicines/:id", MedicineController.getMedicineById);
 router.post(
   "/seller/medicines",
   userAuth,
+  checkUserStatus,
   roleAuth("SELLER"),
   MedicineController.createMedicine,
 );
@@ -19,6 +21,7 @@ router.post(
 router.patch(
   "/seller/medicines/:id",
   userAuth,
+  checkUserStatus,
   roleAuth("SELLER"),
   MedicineController.updateMedicine,
 );
@@ -26,6 +29,7 @@ router.patch(
 router.delete(
   "/seller/medicines/:id",
   userAuth,
+  checkUserStatus,
   roleAuth("SELLER"),
   MedicineController.deleteMedicine,
 );

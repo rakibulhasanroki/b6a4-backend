@@ -25,7 +25,8 @@ export const errorHandler = (
         break;
       case "P2003":
         statusCode = 400;
-        message = "Related resource not found";
+        message =
+          "Cannot delete this resource because it is linked to other records";
         break;
       default:
         statusCode = 400;
@@ -48,6 +49,6 @@ export const errorHandler = (
   res.status(statusCode).json({
     success: false,
     message,
-    error: err.message || err,
+    error: err,
   });
 };

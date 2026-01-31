@@ -43,6 +43,11 @@ const updateMyProfile = async (
   payload: { name?: string; phoneNumber?: string },
 ) => {
   const { name, phoneNumber } = payload;
+  if (name === undefined && phoneNumber === undefined) {
+    throw new Error(
+      "At least one field (name or phoneNumber) is required to update",
+    );
+  }
   const updateData: any = {};
   if (name !== undefined) {
     updateData.name = name;

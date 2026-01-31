@@ -9,7 +9,7 @@ model Review {
     customer   User   @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
     medicineId String
-    medicine   Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+    medicine   Medicine @relation(fields: [medicineId], references: [id], onDelete: Restrict)
 
     @@unique([customerId, medicineId])
     @@map("review")
