@@ -1,45 +1,52 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { MedicineService } from "./medicine.service";
 
-const createMedicine = async (req: Request, res: Response) => {
+const createMedicine = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const result = await MedicineService.createMedicine(req.body, req.user!.id);
     res.status(201).json({ success: true, data: result });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to create medicine",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getAllMedicines = async (req: Request, res: Response) => {
+const getAllMedicines = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const result = await MedicineService.getAllMedicines(req.query);
     res.status(200).json({ success: true, data: result });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to fetch medicines",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getMedicineById = async (req: Request, res: Response) => {
+const getMedicineById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const result = await MedicineService.getMedicineById(
       req.params.id as string,
     );
     res.status(200).json({ success: true, data: result });
-  } catch (error: any) {
-    res.status(404).json({
-      success: false,
-      message: error.message || "Medicine not found",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const updateMedicine = async (req: Request, res: Response) => {
+const updateMedicine = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     await MedicineService.updateMedicine(
       req.params.id as string,
@@ -48,23 +55,21 @@ const updateMedicine = async (req: Request, res: Response) => {
     );
 
     res.status(200).json({ success: true, message: "Medicine updated" });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to update medicine",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const deleteMedicine = async (req: Request, res: Response) => {
+const deleteMedicine = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     await MedicineService.deleteMedicine(req.params.id as string, req.user!.id);
     res.status(200).json({ success: true, message: "Medicine deleted" });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to delete medicine",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 

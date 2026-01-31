@@ -1,7 +1,11 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { CategoryService } from "./category.service";
 
-const createCategory = async (req: Request, res: Response) => {
+const createCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { name } = req.body;
     if (!name) {
@@ -13,15 +17,16 @@ const createCategory = async (req: Request, res: Response) => {
       message: "Category created successfully",
       data: category,
     });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to create category",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getAllCategories = async (req: Request, res: Response) => {
+const getAllCategories = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const categories = await CategoryService.getAllCategories();
 
@@ -30,11 +35,15 @@ const getAllCategories = async (req: Request, res: Response) => {
       data: categories,
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to get all category" });
+    next(error);
   }
 };
 
-const updateCategory = async (req: Request, res: Response) => {
+const updateCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { categoryId } = req.params;
     const { name } = req.body;
@@ -49,15 +58,16 @@ const updateCategory = async (req: Request, res: Response) => {
       message: "Category updated successfully",
       data: category,
     });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to update category",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const deleteCategory = async (req: Request, res: Response) => {
+const deleteCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { categoryId } = req.params;
 
@@ -67,11 +77,8 @@ const deleteCategory = async (req: Request, res: Response) => {
       success: true,
       message: "Category deleted successfully",
     });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to delete category",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 

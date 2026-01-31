@@ -1,7 +1,11 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { ReviewService } from "./review.service";
 
-const createReview = async (req: Request, res: Response) => {
+const createReview = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const user = req.user!;
     const { medicineId, rating, comment } = req.body;
@@ -18,15 +22,16 @@ const createReview = async (req: Request, res: Response) => {
       message: "Review added successfully",
       data: review,
     });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to add review",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getReviewsByMedicine = async (req: Request, res: Response) => {
+const getReviewsByMedicine = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { medicineId } = req.params;
 
@@ -38,11 +43,8 @@ const getReviewsByMedicine = async (req: Request, res: Response) => {
       success: true,
       data: reviews,
     });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to fetch reviews",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 

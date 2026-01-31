@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { OrderService } from "./order.service";
 import { OrderStatus } from "../../../generated/prisma/enums";
 
-const createOrder = async (req: Request, res: Response) => {
+const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { shippingAddress, orderItems } = req.body;
 
@@ -17,15 +17,12 @@ const createOrder = async (req: Request, res: Response) => {
       message: "Order placed successfully",
       data: order,
     });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to place order",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getOrders = async (req: Request, res: Response) => {
+const getOrders = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id, role } = req.user!;
 
@@ -35,15 +32,16 @@ const getOrders = async (req: Request, res: Response) => {
       success: true,
       data: orders,
     });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message || "Failed to get orders",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getOrderById = async (req: Request, res: Response) => {
+const getOrderById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const order = await OrderService.getOrderById(
       req.params.id as string,
@@ -54,15 +52,16 @@ const getOrderById = async (req: Request, res: Response) => {
       success: true,
       data: order,
     });
-  } catch (error: any) {
-    res.status(404).json({
-      success: false,
-      message: error.message || "Order not found",
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
-const getSellerOrders = async (req: Request, res: Response) => {
+const getSellerOrders = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const sellerId = req.user!.id;
 
@@ -72,12 +71,16 @@ const getSellerOrders = async (req: Request, res: Response) => {
       success: true,
       data: orders,
     });
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+  } catch (error) {
+    next(error);
   }
 };
 
-const updateOrderStatus = async (req: Request, res: Response) => {
+const updateOrderStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const userId = req.user!.id;
     const role = req.user!.role;
@@ -96,8 +99,8 @@ const updateOrderStatus = async (req: Request, res: Response) => {
       message: "Order status updated",
       data: result,
     });
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+  } catch (error) {
+    next(error);
   }
 };
 
