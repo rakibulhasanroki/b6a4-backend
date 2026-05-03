@@ -26,6 +26,24 @@ const getAllMedicines = async (
     next(error);
   }
 };
+const getMedicineSuggestions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { q } = req.query;
+
+    const result = await MedicineService.getMedicineSuggestions(q as string);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const getSellerMedicines = async (
   req: Request,
@@ -98,6 +116,7 @@ const deleteMedicine = async (
 export const MedicineController = {
   createMedicine,
   getAllMedicines,
+  getMedicineSuggestions,
   getMedicineById,
   updateMedicine,
   deleteMedicine,

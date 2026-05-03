@@ -2,13 +2,36 @@ import { Role, UserStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 
 const getAllUsers = async (query: any) => {
-  const { page = 1, limit = 10 } = query;
+  const { page = 1, limit = 10, role, status, search } = query;
 
   const skip = (Number(page) - 1) * Number(limit);
 
+  const where: any = {};
+
+  if (role) {
+    where.role = role;
+  }
+
+  if (status) {
+    where.status = status;
+  }
+
+  if (search) {
+    where.OR = [
+      {
+        name: { contains: search, mode: "insensitive" },
+      },
+      {
+        email: { contains: search, mode: "insensitive" },
+      },
+    ];
+  }
+
   const users = await prisma.user.findMany({
+    where,
     skip,
     take: Number(limit),
+    orderBy: { createdAt: "desc" },
     select: {
       id: true,
       name: true,
@@ -18,12 +41,9 @@ const getAllUsers = async (query: any) => {
       phoneNumber: true,
       createdAt: true,
     },
-    orderBy: {
-      createdAt: "desc",
-    },
   });
 
-  const total = await prisma.user.count();
+  const total = await prisma.user.count({ where });
 
   return {
     data: users,

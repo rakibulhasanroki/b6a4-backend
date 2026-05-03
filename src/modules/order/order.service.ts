@@ -101,14 +101,39 @@ const getOrders = async (
   role: Role,
   page: number,
   limit: number,
+  status?: OrderStatus,
+  search?: string,
 ) => {
-  const orderFilter = role === Role.ADMIN ? {} : { customerId: userId };
   const skip = (Number(page) - 1) * Number(limit);
+
+  const where: any = role === Role.ADMIN ? {} : { customerId: userId };
+
+  // status filter
+  if (status) {
+    where.status = status;
+  }
+
+  // search filter
+  if (search) {
+    where.OR = [
+      { id: { contains: search, mode: "insensitive" } },
+      {
+        customer: {
+          name: { contains: search, mode: "insensitive" },
+        },
+      },
+      {
+        customer: {
+          email: { contains: search, mode: "insensitive" },
+        },
+      },
+    ];
+  }
 
   const result = await prisma.order.findMany({
     skip,
     take: Number(limit),
-    where: orderFilter,
+    where,
     orderBy: { createdAt: "desc" },
     include: {
       customer: {
@@ -142,7 +167,7 @@ const getOrders = async (
   });
 
   const total = await prisma.order.count({
-    where: orderFilter,
+    where,
   });
 
   return {
@@ -195,20 +220,45 @@ const getSellerOrders = async (
   sellerId: string,
   page: number,
   limit: number,
+  status?: OrderStatus,
+  search?: string,
 ) => {
   const skip = (Number(page) - 1) * Number(limit);
-  const orders = await prisma.order.findMany({
-    skip,
-    take: Number(limit),
-    where: {
-      orderItems: {
-        some: {
-          medicine: {
-            sellerId: sellerId,
-          },
+
+  const where: any = {
+    orderItems: {
+      some: {
+        medicine: {
+          sellerId,
         },
       },
     },
+  };
+
+  if (status) {
+    where.status = status;
+  }
+
+  if (search) {
+    where.OR = [
+      { id: { contains: search, mode: "insensitive" } },
+      {
+        customer: {
+          name: { contains: search, mode: "insensitive" },
+        },
+      },
+      {
+        customer: {
+          email: { contains: search, mode: "insensitive" },
+        },
+      },
+    ];
+  }
+
+  const orders = await prisma.order.findMany({
+    skip,
+    take: Number(limit),
+    where,
     orderBy: { createdAt: "desc" },
     include: {
       customer: {
@@ -221,23 +271,19 @@ const getSellerOrders = async (
               id: true,
               name: true,
               price: true,
+              image: true,
+              sellerId: true,
             },
           },
         },
       },
     },
   });
+
   const total = await prisma.order.count({
-    where: {
-      orderItems: {
-        some: {
-          medicine: {
-            sellerId: sellerId,
-          },
-        },
-      },
-    },
+    where,
   });
+
   return {
     data: orders,
     metaData: {

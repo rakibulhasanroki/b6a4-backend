@@ -7,6 +7,7 @@ const router: Router = Router();
 
 //  Public
 router.get("/medicines", MedicineController.getAllMedicines);
+router.get("/medicines/suggestions", MedicineController.getMedicineSuggestions);
 router.get("/medicines/:id", MedicineController.getMedicineById);
 
 // Seller

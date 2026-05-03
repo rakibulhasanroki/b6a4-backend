@@ -116,6 +116,35 @@ const getAllMedicines = async (query: any) => {
   };
 };
 
+const getMedicineSuggestions = async (query: string) => {
+  if (!query) return [];
+
+  const results = await prisma.medicine.findMany({
+    where: {
+      OR: [
+        {
+          name: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+        {
+          manufacturer: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+    take: 5,
+  });
+
+  return results;
+};
 const getSellerMedicines = async (sellerId: string, query: any) => {
   const { categoryId, search, page = 1, limit = 10 } = query;
 
@@ -162,7 +191,7 @@ const getSellerMedicines = async (sellerId: string, query: any) => {
 };
 
 const getMedicineById = async (id: string) => {
-  const medicine = prisma.medicine.findUnique({
+  const medicine = await prisma.medicine.findUnique({
     where: { id },
     include: {
       category: true,
@@ -224,6 +253,7 @@ const deleteMedicine = async (id: string, sellerId: string) => {
 export const MedicineService = {
   createMedicine,
   getAllMedicines,
+  getMedicineSuggestions,
   getMedicineById,
   updateMedicine,
   deleteMedicine,
